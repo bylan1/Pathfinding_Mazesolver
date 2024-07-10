@@ -16,7 +16,7 @@ def load(img_path):
         out: numpy array of shape(image_height, image_width, 3)
     """
     out = None
-    out = io.imread(img_path)
+    out = io.imread(img_path)/255
     
     return out
 
@@ -59,18 +59,18 @@ def print_stats(image):
 def high_saturation(image):
     out = image.copy()
 
-    red_mask = (image[:, :, 0] > 127) & (image[:, :, 1] < 127) & (image[:, :, 2] < 127)
-    green_mask = (image[:, :, 0] < 127) & (image[:, :, 1] > 127) & (image[:, :, 2] < 127)
-    blue_mask = (image[:, :, 0] < 127) & (image[:, :, 1] < 127) & (image[:, :, 2] > 127)
-    black_mask = (image[:, :, 0] < 127) & (image[:, :, 1] < 127) & (image[:, :, 2] < 127)
-    white_mask = (image[:, :, 0] > 127) & (image[:, :, 1] > 127) & (image[:, :, 2] > 127)
+    red_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
+    green_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] < 0.5)
+    blue_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] > 0.5)
+    black_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
+    white_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] > 0.5)
 
     # Apply the masks to set the appropriate colors
-    out[red_mask] = [255, 0, 0]
-    out[green_mask] = [0, 255, 0]
-    out[blue_mask] = [0, 0, 255]
+    out[red_mask] = [1.0, 0, 0]
+    out[green_mask] = [0, 1.0, 0]
+    out[blue_mask] = [0, 0, 1.0]
     out[black_mask] = [0, 0, 0]
-    out[white_mask] = [255, 255, 255]
+    out[white_mask] = [1.0, 1.0, 1.0]
 
     return out
 
@@ -83,27 +83,27 @@ def find_points(image):
 
     Returns:
         coords: array of x and y location of coloured points in array
+        out: image removing the red and green elements except key points
     """
     coords = []
-    red_c = 0
-    green_c = 0
-
-    for row in range(image.shape[0]):
-        for col in range(image.shape[1]):
-            pixel = image[row, col]
-
-            if pixel[0] > 127 and pixel[1] < 50 and pixel[2] < 50:
-                image[row,col] = [255, 255, 255]
-                if red_c == 0:
-                    coords.append((row, col))
-                    red_c = 1
-            if pixel[0] < 50 and pixel[1] > 127 and pixel[2] < 50:
-                image[row,col] = [255, 255, 255]
-                if green_c == 0:
-                    coords.append((row, col))
-                    green_c = 1
     
-    return coords
+    red_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
+    green_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] < 0.5)
+
+    red_coords = np.argwhere(red_mask)
+    green_coords = np.argwhere(green_mask)
+
+    out = image.copy()
+
+    coords.append(tuple(red_coords[0]))
+    out[red_coords[0][0], red_coords[0][1]] = [1.0, 0, 0]
+
+    coords.append(tuple(green_coords[0]))
+    out[green_coords[0][0], green_coords[0][1]] = [0, 1.0, 0]
+
+    out[red_mask | green_mask] = [1.0, 1.0, 1.0]
+    
+    return out, coords
 
 # def compress(image):
 #     """Compresses image into lower quality for convenient processing
@@ -116,22 +116,19 @@ def find_points(image):
 #         identify appropriate height and width
 #     """
 
-def binary(input_image, threshold):
+def binary(image, threshold):
     """Converts a RGB image into binary
 
     Inputs:
-        input_image: RGB image of shape(image_height, image_width, 3)
+        image: RGB image of shape(image_height, image_width, 3)
         threshold: limit value splitting binary 0 and 1 values
 
     Returns:
         out: binary numpy array with shape `(output_rows, output_cols)`
     """
-    out = input_image.copy()
 
-    for row in range(input_image.shape[0]):
-        for col in range(input_image.shape[1]):
-            out[row, col] = np.multiply(out[row, col] > threshold, 1)
-
+    greyscale_image = np.mean(image, axis=-1)
+    out = np.where(greyscale_image > threshold, 1, 0)
     return out
 
 def preprocess(image, threshold):
@@ -146,13 +143,17 @@ def preprocess(image, threshold):
         coords: array of x and y location of coloured points in array
     """
     out = None
+    temp = None
     coords = []
+
+    temp = high_saturation(image)
+    temp, coords = find_points(temp)
+    out = binary(temp, threshold)
 
     return out, coords
 
-image1 = load('paths/blankpath.png')
-image1 = high_saturation(image1)
+image1 = load('paths/path-1.png')
 display(image1, 'Blank Path with red and green points')
-coords = find_points(image1)
+new_image, coords = preprocess(image1, 0.5)
 print(coords)
-display(image1, 'Blank Path with red and green points')
+display(new_image, 'binary image with single red and green pixels')
