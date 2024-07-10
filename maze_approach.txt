@@ -1,0 +1,7 @@
+MAZE SOLVER APPROACH
+1. given a picture of a drawn maze (start with an MS Paint image or similar), scan the image for start and end points and then compress and reduce to binary
+2. using the binary image, identify maze edges with the black lines in the binary image
+3. combining the edge data with key points, transfer this data into an array / data structure that can be used by the pathfinding algorithm
+4. apply a heuristic algorithm (or various algorithms) to be able to travel from the start point to the end point without hitting an edge of the maze
+5. open the image in MS Paint and draw the calculated fastest path from the start point to the end point
+6. (opt) draw all paths calculated from each algorithm with different colours in MS Paint
