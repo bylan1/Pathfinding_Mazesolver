@@ -126,9 +126,12 @@ def binary(image, threshold):
     Returns:
         out: binary numpy array with shape `(output_rows, output_cols)`
     """
+    out = image.copy()
 
-    greyscale_image = np.mean(image, axis=-1)
-    out = np.where(greyscale_image > threshold, 1, 0)
+    for row in range(image.shape[0]):
+        for col in range(image.shape[1]):
+            out[row, col] = np.multiply(np.all(out[row, col]) > threshold, 1)
+    
     return out
 
 def preprocess(image, threshold):
@@ -147,13 +150,12 @@ def preprocess(image, threshold):
     coords = []
 
     temp = high_saturation(image)
-    temp, coords = find_points(temp)
-    out = binary(temp, threshold)
+    out, coords = find_points(temp)
+    out = binary(image, threshold)
 
     return out, coords
 
 image1 = load('paths/path-1.png')
 display(image1, 'Blank Path with red and green points')
-new_image, coords = preprocess(image1, 0.5)
-print(coords)
+new_image = binary(image1, 0.5)
 display(new_image, 'binary image with single red and green pixels')
