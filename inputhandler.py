@@ -5,6 +5,8 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+### This Python program will store all of the functions used to handle the input and the necessary preprocessing of the image before beginning the pathfinding aspect of the project
+
 # For image loading (0.0 to 1.0)
 def load(img_path):
     """Loads an image from the file path using skimage.io.imread
@@ -139,9 +141,11 @@ def binary(image, threshold):
     Returns:
         out: binary numpy array with shape `(output_rows, output_cols)`
     """
-    
     mean_vals = np.mean(image, axis=-1)
-    out = (mean_vals > threshold).astype(int)
+
+    out = np.zeros_like(mean_vals)
+    out[mean_vals > threshold] = 1
+    out[mean_vals <= threshold] = np.inf
 
     return out
 
@@ -165,6 +169,18 @@ def preprocess(image, threshold):
     temp = high_saturation(temp)
     temp, coords = colour_process(temp)
     out = binary(temp, threshold)
-    print(out.shape)
 
     return out, coords
+
+# image1 = load('paths/path-1.png')
+# display(image1, 'Blank Path with red and green points')
+# coords = []
+
+# # module test compress func
+# # c_image = compress(image1)
+# # display(c_image, 'Compressed image')
+
+# new_image, coords = preprocess(image1, 0.5)
+# print(coords)
+# display(new_image, 'binary image with single red and green pixels')
+# print_stats(new_image)
