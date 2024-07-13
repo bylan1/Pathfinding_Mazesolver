@@ -145,7 +145,7 @@ def binary(image, threshold):
 
     out = np.zeros_like(mean_vals)
     out[mean_vals > threshold] = 1
-    out[mean_vals <= threshold] = np.inf
+    out[mean_vals <= threshold] = 1000
 
     return out
 
