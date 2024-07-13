@@ -50,25 +50,6 @@ class Problem:
 
         return successors
 
-# breadth first search
-def bfs(problem):
-    closed = set()
-    fringe = deque([(problem.initial_state(), 0, [])])  # state, cost, path
-    
-    while fringe:
-        state, total_cost, path = fringe.popleft()
-        
-        if problem.goal_check(state):
-            return path + [state], total_cost
-        
-        if state not in closed:
-            closed.add(state)
-            successors = problem.expand(state)
-            for successor, cost in successors:
-                fringe.append((successor, total_cost + cost, path + [state]))
-    
-    return "failure", 0
-
 # uniform cost search
 def ucs(problem):
     closed = set()
@@ -152,7 +133,27 @@ def path_creation(path, preproc_list, base_image):
     base_width = base_image.shape[0]
     base_length = base_image.shape[1]
 
+    scaler_width = base_width / pre_width
+    scaler_length = base_length / pre_length
+
+    new_path = [(int(a * scaler_width), int(b * scaler_length)) for a, b in path]
+
+    # complete_path = []
     
+    # for i, (x, y) in enumerate(new_path):
+    #     complete_path.append((x,y))
+    #     if i % 2:
+    #         complete_path.extend([(x+i,y) for i in range(10)])
+    #     else:
+    #         complete_path.extend([(x-i,y) for i in range(10)])
+
+    out = base_image.copy()
+
+    for x, y in new_path:
+        if 0 <= x < out.shape[0] and 0 <= y < out.shape[1]:
+            out[x, y] = [1.0, 0, 1.0]
+    
+    return out
 
 
 # Choose a particular path, i.e. path-1 and input
@@ -161,13 +162,17 @@ test_image = load(f'paths/{maze_file}.png')
 
 preproc_img, coords = preprocess(test_image, 0.5)
 
-display(preproc_img, 'Preprocessed path')
+# display(preproc_img, 'Preprocessed path')
 
 image_list = preproc_img.tolist()
 
 problem = Problem(coords[0], coords[1], image_list)
 
 results = astar(problem, "euclidean")
+
+final_image = path_creation(results[0], image_list, test_image)
+
+display(final_image, 'Final image with dotted path')
 
 # Processes completed in path_creation function
 # for x, y in results[0]:
