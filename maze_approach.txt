@@ -5,3 +5,10 @@ MAZE SOLVER APPROACH
 4. apply a heuristic algorithm (or various algorithms) to be able to travel from the start point to the end point without hitting an edge of the maze
 5. open the image in MS Paint and draw the calculated fastest path from the start point to the end point
 6. (opt) draw all paths calculated from each algorithm with different colours in MS Paint
+
+KEEP IN MIND (in dev):
+X- different complexity
+X- different sized images, i.e. square, rectangle
+!- prioritise MOST red and green points for starting and ending
+- scale limitations, how large can scanned images get
+- different colours, between RGB

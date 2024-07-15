@@ -1,15 +1,26 @@
 import sys
+import os
 import math
 from collections import deque
 from itertools import count
 import heapq
 from inputhandler import *
+import matplotlib.pyplot as plt
 
 # To run code, type in command line: python mazesolver.py [path_name] [method (optional)]
 # path_name must be a image file stored in paths folder within mazesolver (mazesolver/paths/)
 # For simple testing sake, run: python mazesolver.py path-1
 
-### From pathfinder.py
+# For saving the image as a file in paths folder
+def save(img, caption, filename):
+    os.makedirs('paths', exist_ok=True)
+    image_prep(img, caption)
+
+    file_loc = f'paths/{filename}'
+    plt.savefig(file_loc, dpi=500, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+### From pathfinder.py: problem, ucs, astar
 # problem class
 class Problem:
     def __init__(self, initial, goal, grid):
@@ -112,8 +123,39 @@ def astar(problem, heuristic):
 
     return "failure", 0
 
+def pixel_expand(space_list):
+    """Explands list to contain tuples expanding initial tuples
 
-def path_creation(path, preproc_list, base_image):
+    Inputs:
+        space_list: list of distant tuples
+    
+    Returns:
+        out: list of tuples expanded around initial tuples
+    """
+    complete_path = []
+
+    for x, y in space_list:
+        complete_path.append((x,y))
+        complete_path.extend([(x + i, y) for i in range(5)])
+        complete_path.extend([(x - i, y) for i in range(5)])
+        complete_path.extend([(x, y + i) for i in range(5)])
+        complete_path.extend([(x, y - i) for i in range(5)])
+        complete_path.extend([(x + 1, y + i) for i in range(5)])
+        complete_path.extend([(x - 1, y + i) for i in range(5)])
+        complete_path.extend([(x - 1, y - i) for i in range(5)])
+        complete_path.extend([(x + 1, y - i) for i in range(5)])
+        complete_path.extend([(x - i, y + 1) for i in range(5)])
+        complete_path.extend([(x + i, y - 1) for i in range(5)])
+        complete_path.extend([(x - i, y - 1) for i in range(5)])
+        complete_path.extend([(x + i, y + 1) for i in range(5)])
+        
+    # DELETE, checks number of unique points covered in expanded path
+    print(f"Total unique points covered: {len(complete_path)}")
+
+    return complete_path
+
+# For converting the list of tuple coordinates into a visible path on the original maze
+def path_creation(path, preproc_list, base_image, coordinates):
     """Rescales the path in list form to the base image size
     Converts the path list into a fitting application for the base image
     Paints the path on the base image
@@ -122,62 +164,84 @@ def path_creation(path, preproc_list, base_image):
         path: list of tuples (x,y) defining path in list image
         preproc_list: preprocessed image in list form
         base_image: original image of the maze
+        coordinates: (x,y) coordinates of key points
 
     Returns:
-        out: original image of the maze with a drawn path from start to end points
+        out: original image of the maze with a drawn path from highlighted start to end points
     """
 
-    pre_width = len(preproc_list[0])
     pre_length = len(preproc_list)
+    pre_width = len(preproc_list[0])
 
-    base_width = base_image.shape[0]
-    base_length = base_image.shape[1]
+    base_length = base_image.shape[0]
+    base_width = base_image.shape[1]
 
     scaler_width = base_width / pre_width
     scaler_length = base_length / pre_length
 
     new_path = [(int(a * scaler_width), int(b * scaler_length)) for a, b in path]
-
-    # complete_path = []
     
-    # for i, (x, y) in enumerate(new_path):
-    #     complete_path.append((x,y))
-    #     if i % 2:
-    #         complete_path.extend([(x+i,y) for i in range(10)])
-    #     else:
-    #         complete_path.extend([(x-i,y) for i in range(10)])
+    expanded_path = pixel_expand(new_path)
 
     out = base_image.copy()
 
-    for x, y in new_path:
+    for x, y in expanded_path:
         if 0 <= x < out.shape[0] and 0 <= y < out.shape[1]:
             out[x, y] = [1.0, 0, 1.0]
+
+    new_coords = [(int(a * scaler_width), int(b * scaler_length)) for a, b in coordinates]
+    expanded_coords = pixel_expand(new_coords)
+
+    for i, (x, y) in enumerate(expanded_coords):
+        if i > len(expanded_coords) / 2:
+            out[x, y] = [1.0, 0, 0]
+        else:
+            out[x, y] = [0, 1.0, 0]
     
+    
+
     return out
 
 
 # Choose a particular path, i.e. path-1 and input
+if len(sys.argv) < 3:
+    print("Usage: python mazesolver.py <filename> <algorithm>")
+    exit(1)
+
 maze_file = sys.argv[1]
+algorithm = sys.argv[2]
 test_image = load(f'paths/{maze_file}.png')
 
-preproc_img, coords = preprocess(test_image, 0.5)
+display(test_image, 'Loaded maze image')
 
-# display(preproc_img, 'Preprocessed path')
+preproc_img, coords = preprocess(test_image, 0.5)
+print('Starting point coordinates: ', coords[0])
+print('Ending point coordinates: ', coords[1])
+
+display(preproc_img, 'Preprocessed maze image')
 
 image_list = preproc_img.tolist()
 
 problem = Problem(coords[0], coords[1], image_list)
 
-results = astar(problem, "euclidean")
+if algorithm == 'astar':
+    if len(sys.argv) < 4:
+        print("Usage: python mazesolver.py <filename> <algorithm> <heuristic> for A* algorithm")
+        exit(1)
+    heuristic = sys.argv[3]
+    results = astar(problem, heuristic)
+elif algorithm == 'ucs':
+    results = ucs(problem)
+else:
+    print('Failed input. Use format: python mazesolver.py <filename> <algorithm>')
+    exit(1)
 
-final_image = path_creation(results[0], image_list, test_image)
+if results[0] == "failure":
+    print('No possible path')
+    exit(1)
 
-display(final_image, 'Final image with dotted path')
+final_image = path_creation(results[0], image_list, test_image, coords)
 
-# Processes completed in path_creation function
-# for x, y in results[0]:
-#     image_list[x][y] = 1000
+display(final_image, f'Final image with dotted {algorithm} path')
 
-# final_image = np.array(image_list)
-
-# display(final_image, 'Completed path using BFS')
+save(final_image, 'Final image with dotted path', f'{maze_file}-{algorithm}path.png')

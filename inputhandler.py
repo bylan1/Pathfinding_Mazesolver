@@ -23,6 +23,17 @@ def load(img_path):
     
     return out
 
+# For visual preparation
+def image_prep(img, caption=''):
+    plt.figure()
+    plt.imshow(img, cmap='grey')
+    plt.title(caption)
+    plt.axis('off')
+
+    ax = plt.gca()
+    rect = patches.Rectangle((0, 0), img.shape[1], img.shape[0], linewidth=5, edgecolor='black', facecolor='none')
+    ax.add_patch(rect)
+
 # For visual analysis
 def display(img, caption=''):
     """Displays an image given details
@@ -35,15 +46,7 @@ def display(img, caption=''):
         null
         Prints out image with border
     """
-    
-    plt.figure()
-    plt.imshow(img, cmap='grey')
-    plt.title(caption)
-    plt.axis('off')
-
-    ax = plt.gca()
-    rect = patches.Rectangle((0, 0), img.shape[1], img.shape[0], linewidth=5, edgecolor='black', facecolor='none')
-    ax.add_patch(rect)
+    image_prep(img, caption)
 
     plt.show()
 
@@ -63,6 +66,22 @@ def print_stats(image):
     print("Number of channels: ", image.shape[2] if len(image.shape) > 2 else 1)
     
     return None
+
+
+# For image quality compression
+def compress(image):
+    """Compresses image into lower quality for convenient processing
+
+    Inputs:
+        image: numpy array of shape(image_height, image_width, n_channels)
+
+    Returns:
+        out: numpy array of shape(image_height/2, image_width/2, n_channels)
+    """
+
+    out = cv2.resize(image, dsize = (int(image.shape[1]/7.5), int(image.shape[0]/7.5)), interpolation = cv2.INTER_NEAREST)
+
+    return out
 
 # For easier point finding
 def high_saturation(image):
@@ -115,21 +134,6 @@ def colour_process(image):
     
     return out, coords
 
-# For image quality compression
-def compress(image):
-    """Compresses image into lower quality for convenient processing
-
-    Inputs:
-        image: numpy array of shape(image_height, image_width, n_channels)
-
-    Returns:
-        out: numpy array of shape(image_height/2, image_width/2, n_channels)
-    """
-
-    out = cv2.resize(image, dsize = (int(image.shape[0]/7.5), int(image.shape[1]/7.5)), interpolation = cv2.INTER_NEAREST)
-
-    return out
-
 # For binary conversion
 def binary(image, threshold):
     """Converts a RGB image into binary
@@ -145,7 +149,7 @@ def binary(image, threshold):
 
     out = np.zeros_like(mean_vals)
     out[mean_vals > threshold] = 1
-    out[mean_vals <= threshold] = 1000
+    out[mean_vals <= threshold] = 1000000
 
     return out
 
