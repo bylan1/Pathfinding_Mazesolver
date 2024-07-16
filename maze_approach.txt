@@ -9,6 +9,7 @@ MAZE SOLVER APPROACH
 KEEP IN MIND (in dev):
 X- different complexity
 X- different sized images, i.e. square, rectangle
-!- prioritise MOST red and green points for starting and ending
+X- prioritise MOST red and green points for starting and ending
+X- different colours, between RGB
 - scale limitations, how large can scanned images get
-- different colours, between RGB
+ - small marked lines have definition problems (image resolution and quality)

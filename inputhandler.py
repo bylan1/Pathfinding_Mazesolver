@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 from skimage import io
@@ -8,7 +9,7 @@ import matplotlib.patches as patches
 ### This Python program will store all of the functions used to handle the input and the necessary preprocessing of the image before beginning the pathfinding aspect of the project
 
 # For image loading (0.0 to 1.0)
-def load(img_path):
+def load(img_path, extensions=['.png', '.jpg', '.jpeg']):
     """Loads an image from the file path using skimage.io.imread
     Converting pixel values between 0.0 and 1.0
 
@@ -19,7 +20,17 @@ def load(img_path):
         out: numpy array of shape(image_height, image_width, 3)
     """
     out = None
-    out = io.imread(img_path)/255
+
+    for ext in extensions:
+        file_path = f'{img_path}{ext}'
+        if os.path.isfile(file_path):
+            out = io.imread(file_path)/255
+            if out is not None:
+                return out
+            else:
+                print(f"Failed to load image: {file_path}")
+    raise FileNotFoundError(f"No valid image found for {img_path} with extensions {extensions}")
+    
     
     return out
 

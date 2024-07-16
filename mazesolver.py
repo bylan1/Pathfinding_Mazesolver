@@ -201,11 +201,13 @@ def path_creation(path, preproc_list, base_image, coordinates):
 def main():
     maze_file = sys.argv[1]
 
-    test_image = load(f'paths/{maze_file}.png')
+    test_image = load(f'paths/{maze_file}')
 
     display(test_image, 'Loaded maze image')
 
     preproc_img, coords = preprocess(test_image, 0.5)
+    
+    display(preproc_img, 'Preprocessed maze image')
 
     if len(coords) < 2:
         print('No starting or ending point, define red and green points')
@@ -229,7 +231,6 @@ def main():
             algorithm = f'{algorithm}-{heuristic}'
         elif algorithm == 'ucs':
             results = ucs(problem)
-    
     else:
         eucl_out = astar(problem, "euclidean")
         manh_out = astar(problem, "manhattan")
