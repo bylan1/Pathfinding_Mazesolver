@@ -259,6 +259,7 @@ def main():
 
     display(final_image, f'Final image with marked {display_alg} path')
 
+    save(preproc_img, f'Preprocessed maze image', f'{maze_file}-preproc.png')
     save(final_image, f'Final image with marked {display_alg} path', f'{maze_file}-{algorithm}-path.png')
 
     print(f'Path found successfully using {display_alg} algorithm')
