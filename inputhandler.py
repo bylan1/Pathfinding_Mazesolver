@@ -11,6 +11,7 @@ import matplotlib.patches as patches
 # For image loading (0.0 to 1.0)
 def load(img_path, extensions=['.png', '.jpg', '.jpeg']):
     """Loads an image from the file path using skimage.io.imread
+    Try all file extensions
     Converting pixel values between 0.0 and 1.0
 
     Inputs:

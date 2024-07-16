@@ -124,6 +124,7 @@ def astar(problem, heuristic):
 
     return "failure", 0
 
+# For path visibility
 def pixel_expand(space_list):
     """Explands list to contain tuples expanding initial tuples
 
@@ -199,16 +200,14 @@ def path_creation(path, preproc_list, base_image, coordinates):
     return out
 
 def main():
+    # Load the test maze image
     maze_file = sys.argv[1]
-
     test_image = load(f'paths/{maze_file}')
-
     display(test_image, 'Loaded maze image')
 
+    # Preprocess the image, handle missing key points error and display key point coordinates
     preproc_img, coords = preprocess(test_image, 0.5)
-    
     display(preproc_img, 'Preprocessed maze image')
-
     if len(coords) < 2:
         print('No starting or ending point, define red and green points')
         exit(1)
@@ -216,21 +215,26 @@ def main():
     print('Starting point coordinates: (' + str(coords[0][1]) + ', ' + str(coords[0][0]) + ')')
     print('Ending point coordinates: (' + str(coords[1][1]) + ', ' + str(coords[1][0]) + ')')
 
+    # Convert image data into processable form
     image_list = preproc_img.tolist()
 
     problem = Problem(coords[0], coords[1], image_list)
 
+    # Check for inputted algorithm or run euclidean A* algorithm otherwise
     if len(sys.argv) > 2:
         algorithm = sys.argv[2]
         if algorithm == 'astar':
             if len(sys.argv) < 4:
-                print("Usage: python mazesolver.py <filename> <algorithm> <heuristic> for A* algorithm")
+                print("Incorrect usage, please use format: python mazesolver.py <filename> <algorithm> <heuristic> for A* algorithm")
                 exit(1)
             heuristic = sys.argv[3]
             results = astar(problem, heuristic)
             algorithm = f'{algorithm}-{heuristic}'
         elif algorithm == 'ucs':
             results = ucs(problem)
+        else:
+            print("Unknown algorithm, please use algorithm: astar or ucs")
+            exit(1)
     else:
         eucl_out = astar(problem, "euclidean")
         manh_out = astar(problem, "manhattan")
@@ -246,7 +250,7 @@ def main():
             results = manh_out
             algorithm = 'astar-manhattan'
         else:
-            print("Failed test")
+            print("Internal error")
             exit(1)
 
     if results[0] == "failure" or results[1] > 1000000:
@@ -259,12 +263,12 @@ def main():
 
     display(final_image, f'Final image with marked {display_alg} path')
 
-    save(preproc_img, f'Preprocessed maze image', f'{maze_file}-preproc.png')
+    # To save preprocessed image
+    # save(preproc_img, f'Preprocessed maze image', f'{maze_file}-preproc.png')
     save(final_image, f'Final image with marked {display_alg} path', f'{maze_file}-{algorithm}-path.png')
 
     print(f'Path found successfully using {display_alg} algorithm')
     exit(0)
-
 
 
 if __name__ == "__main__":
