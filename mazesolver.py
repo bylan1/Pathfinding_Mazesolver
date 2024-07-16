@@ -149,9 +149,6 @@ def pixel_expand(space_list):
         complete_path.extend([(x + i, y - 1) for i in range(5)])
         complete_path.extend([(x - i, y - 1) for i in range(5)])
         complete_path.extend([(x + i, y + 1) for i in range(5)])
-        
-    # DELETE, checks number of unique points covered in expanded path
-    print(f"Total unique points covered: {len(complete_path)}")
 
     return complete_path
 
@@ -209,6 +206,11 @@ def main():
     display(test_image, 'Loaded maze image')
 
     preproc_img, coords = preprocess(test_image, 0.5)
+
+    if len(coords) < 2:
+        print('No starting or ending point, define red and green points')
+        exit(1)
+
     print('Starting point coordinates: (' + str(coords[0][1]) + ', ' + str(coords[0][0]) + ')')
     print('Ending point coordinates: (' + str(coords[1][1]) + ', ' + str(coords[1][0]) + ')')
 
@@ -224,28 +226,24 @@ def main():
                 exit(1)
             heuristic = sys.argv[3]
             results = astar(problem, heuristic)
-            algorithm = f'{algorithm} {heuristic}'
+            algorithm = f'{algorithm}-{heuristic}'
         elif algorithm == 'ucs':
             results = ucs(problem)
     
     else:
-        ucs_out = ucs(problem)
-        manh_out = astar(problem, "manhattan")
         eucl_out = astar(problem, "euclidean")
+        manh_out = astar(problem, "manhattan")
 
-        costs = np.array([len(ucs_out[0]), len(manh_out[0]), len(eucl_out[0])])
+        costs = np.array([len(eucl_out[0]), len(manh_out[0])])
         
         lowest_cost = costs.min()
 
-        if lowest_cost == len(ucs_out[0]):
-            results = ucs_out
-            algorithm = 'ucs'
+        if lowest_cost == len(eucl_out[0]):
+            results = eucl_out
+            algorithm = 'astar-euclidean'
         elif lowest_cost == len(manh_out[0]):
             results = manh_out
-            algorithm = 'astar manhattan'
-        elif lowest_cost == len(eucl_out[0]):
-            results = eucl_out
-            algorithm = 'astar euclidean'
+            algorithm = 'astar-manhattan'
         else:
             print("Failed test")
             exit(1)
@@ -256,9 +254,14 @@ def main():
 
     final_image = path_creation(results[0], image_list, test_image, coords)
 
-    display(final_image, f'Final image with dotted {algorithm} path')
+    display_alg = algorithm.replace('-', ' ')
 
-    save(final_image, 'Final image with dotted path', f'{maze_file}-{algorithm}path.png')
+    display(final_image, f'Final image with marked {display_alg} path')
+
+    save(final_image, f'Final image with marked {display_alg} path', f'{maze_file}-{algorithm}-path.png')
+
+    print(f'Path found successfully using {display_alg} algorithm')
+    exit(0)
 
 
 
