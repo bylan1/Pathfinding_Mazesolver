@@ -76,29 +76,10 @@ def compress(image):
         image: numpy array of shape(image_height, image_width, n_channels)
 
     Returns:
-        out: numpy array of shape(image_height/2, image_width/2, n_channels)
+        out: numpy array of shape(image_width/2, image_height/2, n_channels)
     """
 
     out = cv2.resize(image, dsize = (int(image.shape[1]/7.5), int(image.shape[0]/7.5)), interpolation = cv2.INTER_NEAREST)
-
-    return out
-
-# For easier point finding
-def high_saturation(image):
-    out = image.copy()
-
-    red_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
-    green_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] < 0.5)
-    blue_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] > 0.5)
-    black_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
-    white_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] > 0.5)
-
-    # Apply the masks to set the appropriate colors
-    out[red_mask] = [1.0, 0, 0]
-    out[green_mask] = [0, 1.0, 0]
-    out[blue_mask] = [0, 0, 1.0]
-    out[black_mask] = [0, 0, 0]
-    out[white_mask] = [1.0, 1.0, 1.0]
 
     return out
 
@@ -115,22 +96,34 @@ def colour_process(image):
     """
     coords = []
     
-    red_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.5)
-    green_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] > 0.5) & (image[:, :, 2] < 0.5)
-    blue_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] > 0.5)
+    red_mask = (image[:, :, 0] > 0.5) & (image[:, :, 1] < 0.5) & (image[:, :, 2] < 0.75)
+    green_mask = (image[:, :, 0] < 0.75) & (image[:, :, 1] > 0.5) & (image[:, :, 2] < 0.5)
+    blue_mask = (image[:, :, 0] < 0.5) & (image[:, :, 1] < 0.75) & (image[:, :, 2] > 0.5)
 
     red_coords = np.argwhere(red_mask)
     green_coords = np.argwhere(green_mask)
 
     out = image.copy()
 
-    coords.append(tuple(red_coords[0]))
-    coords.append(tuple(green_coords[0]))
+    if red_coords.size > 0:
+        red_intensities = image[:, :, 0][red_mask]
+        max_red_index = np.argmax(red_intensities)
+        most_red_pixel = red_coords[max_red_index]
+        coords.append(tuple(most_red_pixel))
+
+    if green_coords.size > 0:
+        green_intensities = image[:, :, 1][green_mask]
+        max_green_index = np.argmax(green_intensities)
+        most_green_pixel = green_coords[max_green_index]
+        coords.append(tuple(most_green_pixel))
 
     out[red_mask | green_mask] = [1.0, 1.0, 1.0]
     out[blue_mask] = [1.0, 1.0, 1.0]
-    out[red_coords[0][0], red_coords[0][1]] = [1.0, 0, 0]
-    out[green_coords[0][0], green_coords[0][1]] = [0, 1.0, 0]
+
+    if red_coords.size > 0:
+        out[red_coords[0][0], red_coords[0][1]] = [1.0, 0, 0]
+    if green_coords.size > 0:
+        out[green_coords[0][0], green_coords[0][1]] = [0, 1.0, 0]
     
     return out, coords
 
@@ -170,7 +163,6 @@ def preprocess(image, threshold):
     coords = []
 
     temp = compress(image)
-    temp = high_saturation(temp)
     temp, coords = colour_process(temp)
     out = binary(temp, threshold)
 

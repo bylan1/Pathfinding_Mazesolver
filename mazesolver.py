@@ -7,9 +7,10 @@ import heapq
 from inputhandler import *
 import matplotlib.pyplot as plt
 
-# To run code, type in command line: python mazesolver.py [path_name] [method (optional)]
-# path_name must be a image file stored in paths folder within mazesolver (mazesolver/paths/)
-# For simple testing sake, run: python mazesolver.py path-1
+# To run code, type in command line: python mazesolver.py <filename> <algorithm> <heuristic (opt)>
+# filename must be a png image file stored in paths folder within mazesolver (mazesolver/paths/)
+# algorithm must be one of "ucs" or "astar". For "astar" algorithm, include the heuristic of choice between "euclidean" or "manhattan" 
+# For simple testing sake, run: python mazesolver.py path-1 ucs
 
 # For saving the image as a file in paths folder
 def save(img, caption, filename):
@@ -194,54 +195,72 @@ def path_creation(path, preproc_list, base_image, coordinates):
 
     for i, (x, y) in enumerate(expanded_coords):
         if i > len(expanded_coords) / 2:
-            out[x, y] = [1.0, 0, 0]
-        else:
             out[x, y] = [0, 1.0, 0]
-    
-    
+        else:
+            out[x, y] = [1.0, 0, 0]
 
     return out
 
+def main():
+    maze_file = sys.argv[1]
 
-# Choose a particular path, i.e. path-1 and input
-if len(sys.argv) < 3:
-    print("Usage: python mazesolver.py <filename> <algorithm>")
-    exit(1)
+    test_image = load(f'paths/{maze_file}.png')
 
-maze_file = sys.argv[1]
-algorithm = sys.argv[2]
-test_image = load(f'paths/{maze_file}.png')
+    display(test_image, 'Loaded maze image')
 
-display(test_image, 'Loaded maze image')
+    preproc_img, coords = preprocess(test_image, 0.5)
+    print('Starting point coordinates: (' + str(coords[0][1]) + ', ' + str(coords[0][0]) + ')')
+    print('Ending point coordinates: (' + str(coords[1][1]) + ', ' + str(coords[1][0]) + ')')
 
-preproc_img, coords = preprocess(test_image, 0.5)
-print('Starting point coordinates: ', coords[0])
-print('Ending point coordinates: ', coords[1])
+    image_list = preproc_img.tolist()
 
-display(preproc_img, 'Preprocessed maze image')
+    problem = Problem(coords[0], coords[1], image_list)
 
-image_list = preproc_img.tolist()
+    if len(sys.argv) > 2:
+        algorithm = sys.argv[2]
+        if algorithm == 'astar':
+            if len(sys.argv) < 4:
+                print("Usage: python mazesolver.py <filename> <algorithm> <heuristic> for A* algorithm")
+                exit(1)
+            heuristic = sys.argv[3]
+            results = astar(problem, heuristic)
+            algorithm = f'{algorithm} {heuristic}'
+        elif algorithm == 'ucs':
+            results = ucs(problem)
+    
+    else:
+        ucs_out = ucs(problem)
+        manh_out = astar(problem, "manhattan")
+        eucl_out = astar(problem, "euclidean")
 
-problem = Problem(coords[0], coords[1], image_list)
+        costs = np.array([len(ucs_out[0]), len(manh_out[0]), len(eucl_out[0])])
+        
+        lowest_cost = costs.min()
 
-if algorithm == 'astar':
-    if len(sys.argv) < 4:
-        print("Usage: python mazesolver.py <filename> <algorithm> <heuristic> for A* algorithm")
+        if lowest_cost == len(ucs_out[0]):
+            results = ucs_out
+            algorithm = 'ucs'
+        elif lowest_cost == len(manh_out[0]):
+            results = manh_out
+            algorithm = 'astar manhattan'
+        elif lowest_cost == len(eucl_out[0]):
+            results = eucl_out
+            algorithm = 'astar euclidean'
+        else:
+            print("Failed test")
+            exit(1)
+
+    if results[0] == "failure" or results[1] > 1000000:
+        print('No possible path from start to end points')
         exit(1)
-    heuristic = sys.argv[3]
-    results = astar(problem, heuristic)
-elif algorithm == 'ucs':
-    results = ucs(problem)
-else:
-    print('Failed input. Use format: python mazesolver.py <filename> <algorithm>')
-    exit(1)
 
-if results[0] == "failure":
-    print('No possible path')
-    exit(1)
+    final_image = path_creation(results[0], image_list, test_image, coords)
 
-final_image = path_creation(results[0], image_list, test_image, coords)
+    display(final_image, f'Final image with dotted {algorithm} path')
 
-display(final_image, f'Final image with dotted {algorithm} path')
+    save(final_image, 'Final image with dotted path', f'{maze_file}-{algorithm}path.png')
 
-save(final_image, 'Final image with dotted path', f'{maze_file}-{algorithm}path.png')
+
+
+if __name__ == "__main__":
+    main()
