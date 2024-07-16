@@ -31,7 +31,6 @@ def load(img_path, extensions=['.png', '.jpg', '.jpeg']):
                 print(f"Failed to load image: {file_path}")
     raise FileNotFoundError(f"No valid image found for {img_path} with extensions {extensions}")
     
-    
     return out
 
 # For visual preparation
