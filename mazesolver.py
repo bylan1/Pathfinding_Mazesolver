@@ -207,7 +207,7 @@ def main():
 
     # Preprocess the image, handle missing key points error and display key point coordinates
     preproc_img, coords = preprocess(test_image, 0.5)
-    display(preproc_img, 'Preprocessed maze image')
+    
     if len(coords) < 2:
         print('No starting or ending point, define red and green points')
         exit(1)
@@ -267,7 +267,7 @@ def main():
     # save(preproc_img, f'Preprocessed maze image', f'{maze_file}-preproc.png')
     save(final_image, f'Final image with marked {display_alg} path', f'{maze_file}-{algorithm}-path.png')
 
-    print(f'Path found successfully using {display_alg} algorithm')
+    print(f'Path found successfully using {display_alg} algorithm with a length of {len(results[0])} units')
     exit(0)
 
 
