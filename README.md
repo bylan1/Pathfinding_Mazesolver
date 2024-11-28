@@ -40,6 +40,7 @@ $ python mazesolver.py [filename] [algorithm] [heuristic]
 ![Maze Display](./paths/phototest2-ucs-path.png)
 
 ## Further Development
+- Further optimise pathfinding algorithms
 - Optimise maze wall definition
 - More user-friendly input handling
 - Explore more algorithm options
