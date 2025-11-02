@@ -4,7 +4,7 @@
 
 ## Key Features
 
-* Input handling
+* Image processing
 * Algorithm selection
   - Choice of using Uniform Cost Search (UCS) algorithm or A* algorithm with heuristic options between Manhattan and Euclidean distance
 * Visual representation
